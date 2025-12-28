@@ -77,6 +77,7 @@ class Client(models.Model):
 
 class System(models.Model):
     name = models.CharField(max_length=30, unique=True)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='systems', blank=True, null=True)
 
     def __str__(self):
         return self.name
