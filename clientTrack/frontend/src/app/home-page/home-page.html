@@ -1,0 +1,197 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <button class="btn-add-client" (click)="openAddClientPanel()">
+      <mat-icon class="material-symbols-outlined">person_add</mat-icon>
+      לקוח חדש
+    </button>
+  </header>
+
+  <div class="client-grid">
+    @for (client of clients; track client.id) {
+    <div class="client-card" (click)="openDetails(client)">
+      <div class="card-header">
+        <span class="status-badge">{{ client.status }}</span>
+        <h3>{{ client.full_name }}</h3>
+        <p class="job-title">{{ client.job }}</p>
+        <p class="job-title">{{ client.phone_number }}</p>
+      </div>
+
+      <div class="card-body">
+        <div class="info-row">
+          <span class="label">תשלום לשעה:</span>
+          <span class="value">{{ client.hourly_rate }}₪</span>
+        </div>
+        <div class="info-row highlight">
+          <span class="label">סה"כ לתשלום:</span>
+          <span class="value">{{ client.amount_to_pay }}₪</span>
+        </div>
+      </div>
+
+      <div class="card-actions-overlay">
+        <button
+          class="icon-btn add-hours"
+          (click)="openAddTimePanel(client); $event.stopPropagation()"
+        >
+          <mat-icon class="material-symbols-outlined">more_time</mat-icon>
+        </button>
+
+        <button class="icon-btn edit-icon" (click)="editClient(client); $event.stopPropagation()">
+          <mat-icon class="material-symbols-outlined">edit</mat-icon>
+        </button>
+
+        <button
+          class="icon-btn delete-icon"
+          (click)="deleteClient(client); $event.stopPropagation()"
+        >
+          <mat-icon class="material-symbols-outlined">delete</mat-icon>
+        </button>
+      </div>
+    </div>
+    }
+  </div>
+
+  @if (selectedClient) {
+  <div class="modal-backdrop" (click)="closeDetails()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ selectedClient.full_name }}</h2>
+        <button class="close-btn" (click)="closeDetails()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="detail-section">
+          <p><strong>מקצוע:</strong> {{ selectedClient.job }}</p>
+          <p><strong>סטטוס:</strong> {{ selectedClient.status }}</p>
+          <p><strong>תשלום לפי שעה:</strong> {{ selectedClient.hourly_rate }}₪</p>
+          <p><strong>מספר פלאפון:</strong> {{ selectedClient.phone_number }}</p>
+          <p><strong>כתובת:</strong> {{ selectedClient.address }}</p>
+        </div>
+
+        <div class="detail-section highlight">
+          <h3>מצב תשלום</h3>
+          <p>
+            סה"כ: <strong>{{ selectedClient.amount_to_pay }}₪</strong>
+          </p>
+        </div>
+
+        <div class="card-systems-summary">
+          <div class="summary-title">פירוט עבודה:</div>
+          @if (selectedClient.breakdown && selectedClient.breakdown.length > 0) {
+                <div class="systems-list">
+                    @for (item of selectedClient.breakdown; track item.system) {
+                <div
+                    class="system-tag"
+                    [style.background-color]="getSystemColor(item.system)"
+                    [style.border-color]="getSystemTextColor(item.system)"
+                    >
+                    <span class="tag-name" [style.color]="getSystemTextColor(item.system)">
+                    {{ item.system || 'כללי' }}</span>
+                    <span class="tag-hours">{{ item.hours }} ש'</span>
+                </div>
+                }
+            </div>
+          } @else {
+          <p>אין מערכות רשומות ללקוח זה.</p>
+          }
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeDetails()">סגור</button>
+      </div>
+    </div>
+  </div>
+
+
+  } @if (isEditing) {
+  <div class="modal-backdrop" (click)="closeEditPanel()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editingClientId ? 'עריכת פרטי לקוח' : 'הוספת לקוח חדש' }}</h2>
+        <button class="close-btn" (click)="closeEditPanel()">&times;</button>
+      </div>
+
+      <form [formGroup]="clientForm" (ngSubmit)="saveClient()">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>שם</label>
+              <input type="text" formControlName="full_name" />
+            </div>
+            <div class="form-group">
+              <label>תפקיד</label>
+              <input type="text" formControlName="job" />
+            </div>
+            <div class="form-group">
+              <label>מס פלאפון</label>
+              <input type="text" formControlName="phone_number" />
+            </div>
+            <div class="form-group">
+              <label>כתובת</label>
+              <input type="text" formControlName="address" />
+            </div>
+            <div class="form-group">
+              <label>תעריף שעתי (₪)</label>
+              <input type="number" formControlName="hourly_rate" />
+            </div>
+            <div class="form-group full-width">
+              <label>סטטוס</label>
+              <select formControlName="status">
+                <option value="עצמאי">עצמאי</option>
+                <option value="חברה">חברה</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeEditPanel()">ביטול</button>
+          <button type="submit" class="btn-primary" [disabled]="clientForm.invalid">
+            שמור לקוח
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  
+  } @if (isAddTimeModalOpen) {
+  <div class="modal-backdrop" (click)="closeAddTimePanel()">
+    <div class="add-hours-window" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>הוספת שעות - {{ selectedClient?.full_name }}</h2>
+        <button class="close-btn" (click)="closeAddTimePanel()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="add-system-inline">
+          <label>?מערכת חדשה</label>
+          <div class="inline-group">
+            <input type="text" [(ngModel)]="newSystemName" placeholder="שם המערכת (למשל: CRM)" />
+            <button type="button" class="btn-small-add" (click)="addNewSystem()">הוסף</button>
+          </div>
+        </div>
+
+        <hr/>
+        <div class="form-group">
+          <label>בחר מערכת לעבודה</label>
+          <select [(ngModel)]="selectedSystemId" name="selectedSystemId">
+            <option [value]="null">בחר מערכת...</option>
+            @for (sys of allSystems; track sys.id) {
+            <option [value]="sys.id">{{ sys.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-top: 1rem">
+          <label>?כמה שעות להוסיף</label>
+          <input type="number" [(ngModel)]="hoursToAdd" name="hoursToAdd" placeholder="למשל: 2.5" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeAddTimePanel()">ביטול</button>
+        <button class="btn-primary" (click)="confirmAddHours()">שמור שעות</button>
+      </div>
+    </div>
+  </div>
+  }
+</div>
