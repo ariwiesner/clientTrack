@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Client } from '../models/client.model';
+import { Client, System } from '../models/client.model';
 
 @Injectable({
   providedIn: 'root'
@@ -22,16 +22,24 @@ export class ClientService {
     return this.http.delete(`${this.apiUrl}${id}/`);
   }
 
-  addHours(clientId: number, hours: number, description: string) {
-    const payload = { 
-        client: clientId, 
-        hours: hours, 
-        description: description 
-    };
-    return this.http.post('http://127.0.0.1:8000/api/time-entries/', payload);
+  addTimeEntry(payload: any): Observable<any> {
+    const url = 'http://127.0.0.1:8000/api/time-entries/'; 
+    return this.http.post(url, payload);
   }
 
-updateClient(id: number, clientData: any): Observable<Client> {
-    return this.http.put<Client>(`${this.apiUrl}${id}/`, clientData);
+  updateClient(id: number, clientData: any): Observable<Client> {
+      return this.http.put<Client>(`${this.apiUrl}${id}/`, clientData);
+  }
+
+
+  getAllSystems(): Observable<System[]> {
+    return this.http.get<System[]>('http://127.0.0.1:8000/api/systems/');
+  }
+
+  createSystem(name: string, clientId: number): Observable<any> {
+    return this.http.post('http://127.0.0.1:8000/api/systems/', {
+      name: name,
+      client: clientId
+    });
   }
 }

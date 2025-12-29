@@ -12,7 +12,7 @@ class ClientSerializer(serializers.ModelSerializer):
     # this SerializerMethodField tells django to search for a function that do the logic for the breakdown field. 
     breakdown = serializers.SerializerMethodField()
     # the list of systems for client
-    systems = SystemSerializer(many=True, read_only=True, source='systems_set')
+    systems = SystemSerializer(many=True, read_only=True)
     
     class Meta:
         model = Client
